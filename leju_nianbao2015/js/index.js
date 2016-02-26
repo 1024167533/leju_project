@@ -1,0 +1,622 @@
+var game
+var keysX = [252, 252, 252, 252, 252, 252, 252];
+var keysY = [228, 238, 341, 198, 198, 228, 229];
+
+window.onload = function(){
+
+    //创建phaser游戏  并放入到container容器中
+	game = new Phaser.Game(320, 568, Phaser.CANVAS);
+	game.state.add('Boot', BasicGame.Boot);
+	game.state.add('Preloader', BasicGame.Preloader);
+	game.state.add('MainMenu', BasicGame.MainMenu);
+	game.state.add('Game', BasicGame.Game);
+
+	//启动状态
+	game.state.start('Boot');
+
+}
+
+var BasicGame = {}
+
+BasicGame.Boot = function(game) {}
+
+BasicGame.Boot.prototype = {
+	
+	init: function(){
+		
+	   if(this.game.device.desktop)
+	   {
+	     //特殊的桌面相关的设置 
+        this.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;       
+	    this.scale.refresh();
+	   }
+	   else{
+	     //移动设备相关的设置
+		 this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL; 
+		 this.scale.setMinMax(320, 568, 1024, 768);
+		 this.scale.forceLandscape = true;
+	   }
+	   this.scale.pageAlignHorizontally = true;
+	   this.scale.pageAlignVertically = true;
+	},
+
+	preload: function(){
+	   //载入preloader所需的一些资源
+	  this.load.image('preloaderBar', 'assets/bar.png');
+	},
+
+	create: function(){
+	   //进入真正的preloader
+	   this.state.start('Preloader')
+	}
+
+};
+
+BasicGame.Preloader = function(game){
+
+   this.back = null;
+   this.preloadBar = null; 
+};
+
+BasicGame.Preloader.prototype = {
+
+   preload: function(){
+
+	  this.stage.backgroundColor = '#2d2d2d';
+      this.preloadBar = this.add.sprite(this.game.width / 2 - 100, this.game.height / 2, 'preloaderBar'); 
+	  this.add.text(this.game.width / 2, this.game.height / 2 - 30, "Loading...", {
+		  font: "32px monospace", fill: "#fff" }).anchor.setTo(0.5, 0.5); 
+	  // 这里把 preloadBar 精灵设置为一个载入器精灵。当文件在载入时，他会自动从 0 到全长进行裁剪长度 
+	  this.load.setPreloadSprite(this.preloadBar); 
+
+      //this.add.tileSprite(0, 0, 320, 568, 'sky');
+
+      this.load.image('sky', 'assets/sky.png');
+	  this.load.image('qm', 'assets/qm.png');
+      this.load.image('ground', 'assets/ground.png');
+	  this.load.image('ledge', 'assets/ledge.png');
+	  this.load.image('platform', 'assets/platform2.png');
+      this.load.image('star', 'assets/star.png');
+	  this.load.image('home', 'assets/home.png');
+	  this.load.image('last', 'assets/last.png');
+	  this.load.image('zc', 'assets/1.png');
+	  this.load.image('td', 'assets/2.png');
+	  this.load.image('fc', 'assets/3.png');
+	  this.load.image('fd', 'assets/4.png');
+	  this.load.image('fq', 'assets/5.png');
+	  this.load.image('ny', 'assets/6.png')
+
+      this.load.spritesheet('dude', 'assets/dude.png', 69, 38);
+	  this.load.spritesheet('left', 'assets/left.png', 42, 42);
+	  this.load.spritesheet('right', 'assets/right.png', 42, 42);
+	  this.load.spritesheet('up', 'assets/up.png', 42, 42);
+
+	  this.load.spritesheet('kaboom', 'assets/explode.png', 128, 128);
+	  keys = ['zc', 'td', 'fc', 'fd', 'fq', 'zc', 'ny'];
+   },
+
+   create: function(){
+	  //当加载完成后，禁止裁剪载入条s
+	  this.preloadBar.cropEnabled = false;
+      this.state.start('MainMenu');
+   }
+  /* update: function(){
+     //如果没有音频可删去这里 并把game.state.start放在create中
+   },*/
+
+};
+
+BasicGame.MainMenu = function(game){
+
+   this.playButton = null;
+};
+
+BasicGame.MainMenu.prototype = {
+   //资源加载完成后，进入主菜单
+   //添加一张图片和一个按钮
+   create: function(){
+      this.add.tileSprite(0, 0, 320, 568, 'sky');
+	  this.loadingText = this.add.text(this.game.width / 2, this.game.height / 2, "点击屏幕开始游戏", {
+	    font: "12px monospace", fill: "#fff", align: "center"
+	  })
+	  this.loadingText.anchor.setTo(0.5, 0.5);
+   },
+
+   update: function(){
+      if(this.input.keyboard.isDown(Phaser.Keyboard.Z)||this.input.activePointer.isDown)
+	  {
+	     this.startGame();
+	  }
+   },
+   
+   startGame: function(pointer){
+      this.state.start('Game');
+   }
+};
+
+BasicGame.Game = function(game){
+
+};
+
+BasicGame.Game.prototype ={
+
+   create: function(){
+    //创建游戏背景 玩家等 并启动键盘监听
+	this.cursors = this.input.keyboard.createCursorKeys();
+	   showGame();
+	   
+    },
+       
+   update: function(){
+	//检测碰撞，响应玩家输入 任何东西都可以放在这里
+     
+	   //碰撞检测
+	   game.physics.arcade.collide(player, ledges);
+	   game.physics.arcade.collide(player, platforms);
+       game.physics.arcade.collide(player, ground);
+	
+        // 检测星星与平台是否覆盖
+	   game.physics.arcade.overlap(stars, platforms, starsKill, null, this);
+	   game.physics.arcade.overlap(stars, ledges, starsKill, null, this);
+
+        //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+       game.physics.arcade.overlap(player, stars, collectStar, null, this);
+
+	   //  Checks to see if the player collide with any of the diamonds, if he does call the collectStar function
+	   game.physics.arcade.collide(player, qms, collide, null, this);
+
+	   //game.physics.arcade.collide(player, txt, collide, null, this);
+
+	   //显示最后一页
+	   game.physics.arcade.collide(player, home, enterHome, null, this);
+
+       //  Reset the players velocity (movement)
+       player.body.velocity.x = 0;
+
+       //适应手机的按钮
+      if ( btLeftKeep)
+       {
+           //  Move to the left
+           player.body.velocity.x = -150;
+           player.animations.play('left');
+       }
+       else if (btRightKeep)
+       {
+           //  Move to the right
+		   player.body.velocity.x += 150;
+           player.animations.play('right');
+       }
+       else
+       {
+           //  Stand still
+           player.animations.stop();
+
+           player.frame = 4;
+       }
+    
+       //  Allow the player to jump if they are touching the ground.
+       if (btUpKeep && player.body.touching.down)
+       {
+           player.body.velocity.y = -350;
+       } 
+	   //当最后一张图片出现时 显示点击重玩  游戏结束
+	   if(last.y == 100)
+	   {
+		  if(this.input.keyboard.isDown(Phaser.Keyboard.Z)||this.input.activePointer.isDown)
+	      {
+	         this.quitGame();
+			 window.location.href = 'http://gz.game.leju.com/201512/002ljzj/2xy';
+	      }
+	   }
+	},
+
+    quitGame: function(pointer){
+
+		   //初始化 然后回到主菜单
+           init();
+		   this.state.start('MainMenu');
+		
+    }
+}
+
+
+var keys = [];
+var player;
+
+var cursors;
+
+var ground;
+
+var x = 32;
+var y = 56.8;
+
+var platform = []
+var platforms = [];
+var platformX = [3 * x, 8 * x];
+var platformY = [2 * y, 4 * y];
+
+var ledge = [];
+var ledges = [];
+var ledgeX = [2*x, 7 * x];
+var ledgeY = [7 * y, 6 * y];
+
+var hei = [3 * y, 4 * y];
+
+var qms = [];
+var quesMarkX = [3 * x + 100, 8 * x + 100];
+var quesMarkY = [2 * y, 4 * y];
+var quesMark;
+
+var star = [];
+var stars = [];
+var starY = [46.8 * 3 - 22, 46.8 * 6 - 22, 46.8 * 4.5 - 22, 46.8 *8- 22 ];
+
+var explosions;
+var txtExp;
+
+var score = 0;
+var scoreText;
+
+var txt = [];
+var txts = [];
+
+
+var btLeft;
+var btRight;
+var btUp;
+
+var btUpKeep;
+var btDownKeep;
+var btLeftKeep;
+var btRightKeep;
+
+var home;
+var last;
+
+function init(){
+
+   keys = ['zc', 'td', 'fc', 'fd', 'fq', 'zc', 'ny'];
+
+   x = 32;
+   y = 56.8;
+
+   platform = []
+   platforms = [];
+   platformX = [3 * x, 8 * x];
+   platformY = [2 * y, 4 * y];
+
+   ledge = [];
+   ledges = [];
+   ledgeX = [2*x, 7 * x];
+   ledgeY = [7 * y, 6 * y];
+
+   hei = [3 * y, 4 * y];
+
+   qms = [];
+   quesMarkX = [3 * x + 100, 8 * x + 100];
+   quesMarkY = [2 * y, 4 * y];
+
+   star = [];
+   stars = [];
+   starY = [46.8 * 3 - 22, 46.8 * 6 - 22, 46.8 * 4.5 - 22, 46.8 *8- 22 ];
+
+   score = 0;
+
+   txt = [];
+   txts = [];
+
+   home.visible = true;
+   btLeft.visible = true;
+   btRight.visible = true;
+   btUp.visible = true;
+  
+}
+function showGame(){
+   
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+	var sky = game.add.tileSprite(0, 0, 262 * 10, 568, 'sky');
+	
+    //设置边界
+	game.world.setBounds(0, 0, 320 * 8 + 60, 568);
+   
+    player = game.add.sprite(32, game.world.height - 250, 'dude');
+
+    cursors = game.input.keyboard.createCursorKeys();
+
+    game.camera.follow(player);
+	
+	//  We need to enable physics on the player
+    game.physics.arcade.enable(player);
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.body.bounce.y = 0.2;
+    player.body.gravity.y = 300;
+    player.body.collideWorldBounds = true;
+
+    //  Our two animations, walking left and right.
+    player.animations.add('left', [0, 1, 2, 3], 10, true);
+    player.animations.add('right', [5, 6, 7, 8], 10, true);
+   	
+	//star
+	createStars();
+
+	//创建台阶
+	createPlatforms();  
+   
+	//创建跳跃平台	
+	createStage(); 	
+	  	
+	//创建碰撞点
+	createQuesMark();
+
+	//创建文本图片
+	createTxt();
+		
+	//地面
+    ground = game.add.tileSprite(0, 568-84, 320 * 8 + 60, 84, 'ground');
+
+    game.physics.enable([player, ground], Phaser.Physics.ARCADE);
+    game.physics.arcade.enable(ground);
+ 
+	ground.body.collideWorldBounds = true;
+	ground.body.immovable = true; 
+
+	createHome();
+	createLast();
+
+	
+	
+	//an explosion pool
+    explosions = game.add.group();
+	explosions.createMultiple(30, 'kaboom');
+    explosions.forEach(setupInvader, this);
+
+    //  The score
+    scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+	scoreText.fixedToCamera = true;
+
+    //  Our controls.
+    cursors = game.input.keyboard.createCursorKeys();
+	
+	
+	
+	
+	//control
+	btUp = game.add.button(150, game.world.height - 64, 'up', null, this, 0, 0, 1);
+	btUp.anchor.setTo(0.5, 0.5);
+	btUp.fixedToCamera = true;
+	btUp.onInputDown.add(btUpOnDown, this);
+	btUp.onInputUp.add(btUpOnUp, this);
+
+    btLeft =  game.add.button(100, game.world.height - 24, 'left', null, this, 0, 0, 1);
+    btLeft.anchor.setTo(0.5, 0.5);
+	btLeft.fixedToCamera = true;
+	btLeft.onInputDown.add(btLeftOnDown, this);
+	btLeft.onInputUp.add(btLeftOnUp, this);
+
+	btRight =  game.add.button(192, game.world.height - 24, 'right', null, this, 0, 0, 1);
+	btRight.anchor.setTo(0.5, 0.5);
+	btRight.fixedToCamera = true;
+	btRight.onInputDown.add(btRightOnDown, this);
+	btRight.onInputUp.add(btRightOnUp, this); 
+
+	
+}
+
+function createStars(){
+    
+   //stars = game.add.group();
+   for(var j = 0; j < 7; j++)
+	{	    
+	    for(var i = 0; i < 4; i++)
+	    {   
+			star[i] = game.add.tileSprite(game.rnd.between(320 *j, 320 * (j+1)), starY[i], 24, 22, 'star'); 
+
+	        game.physics.enable(star[i], Phaser.Physics.ARCADE);
+            game.physics.arcade.enable(star[i]);
+
+	        star[i].body.collideWorldBounds = true;
+			stars.push(star[i]);
+			
+        }		
+	} 
+}
+
+function createStage(){
+    
+    for(var j = 0; j < 7; j++)
+	{
+	    for(var i = 0; i < 2; i++)
+	    {  
+			ledge[i] = game.add.tileSprite(ledgeX[i] + 320 * j, ledgeY[i], 67, hei[i], 'ledge');
+
+	        game.physics.enable([player, ledge[i]], Phaser.Physics.ARCADE);
+            game.physics.arcade.enable(ledge[i]);
+
+	        ledge[i].body.collideWorldBounds = true;
+	        ledge[i].body.immovable = true;
+			//ledge[i].visible = false;
+			ledges.push(ledge[i]);
+			
+        }		
+ 
+    }
+}
+
+function createPlatforms(){
+
+   for(var j = 0; j < 7; j++)
+	{
+	    for(var i = 0; i < 2; i++)
+	    {   //可以用判断奇偶数来控制显示在camera的左侧还是右侧    
+			platform[i] = game.add.tileSprite(platformX[i] + 320 * j, platformY[i], game.rnd.between(100,250), 35, 'platform');
+
+	        game.physics.enable([player, platform[i]], Phaser.Physics.ARCADE);
+            game.physics.arcade.enable(platform[i]);
+
+	        platform[i].body.collideWorldBounds = true;
+	        platform[i].body.immovable = true;
+			//ledge[i].visible = false;
+			platforms.push(platform[i]);
+			
+        }		
+ 
+    }
+}
+
+function createQuesMark(){
+
+	for(var j = 0; j < 7; j ++)
+	{
+	    for(var i = 0; i < 2; i ++)
+		{
+		    var qm = game.add.tileSprite(quesMarkX[i] + 320 * j, quesMarkY[i], 43, 37, 'qm');
+			game.physics.enable([player, qm], Phaser.Physics.ARCADE);
+            game.physics.arcade.enable(qm);
+
+	        qm.body.collideWorldBounds = true;
+	        qm.body.immovable = true;
+			//ledge[i].visible = false;
+			qm.isOdd = (i == 0); //给问号动态添加一个判断是否为奇数的属性i==0就是第一个，所以是奇数
+			if(!qm.isOdd){
+				qm.txtIndex = j;//如果是偶数，添加新属性记录文本的序号
+			}
+			qms.push(qm);
+		}
+	}
+}
+
+function createTxt(){
+
+   for(var j = 0; j < 7; j ++)
+	{
+		//先不管文本会出现在哪，在碰到问题的时候再设置相对于问号的位置即可
+		var txt = game.add.tileSprite(0, 0, keysX[j], keysY[j], keys[j]);
+		txt.alpha = 0;
+		txts.push(txt);
+	}
+}
+function createHome(){
+
+   //进入最后页面的屋子
+	home = game.add.tileSprite(320 * 8 + 60 - 125, 0, 125, 568, 'home');
+	game.physics.enable(home, Phaser.Physics.ARCADE);
+    game.physics.arcade.enable(home);
+	home.body.collideWorldBounds = true;	
+}
+
+function createLast(){
+
+   //最后显示的页面
+	last = game.add.sprite(0, 0, 'last');
+	game.physics.enable(last, Phaser.Physics.ARCADE);
+    game.physics.arcade.enable(last);
+	last.body.collideWorldBounds = true;
+	last.visible = false;
+}
+function setupInvader (player) {
+
+    player.anchor.x = 0.5;
+    player.anchor.y = 0.5;
+    player.animations.add('kaboom');
+
+}
+ 
+
+function actionLeft(){
+
+    player.body.velocity.x = -150;
+
+}
+
+function actionRight(){
+
+    player.body.velocity.x += 250;
+
+}
+
+function actionUp(){
+
+    player.body.velocity.y = -350;
+}
+
+function btUpOnDown() {
+    btUpKeep = true;
+}
+function btUpOnUp() {
+    btUpKeep = false;
+}
+
+function btLeftOnDown() {
+    btLeftKeep = true;
+}
+function btLeftOnUp() {
+    btLeftKeep = false;
+}
+function btRightOnDown() {
+    btRightKeep = true;
+}
+function btRightOnUp() {
+    btRightKeep = false;
+}
+
+function starsKill (star, platform, ledge){
+   
+    star.kill();
+}
+
+function collectStar (player, star) {
+    
+    // Removes the star from the screen
+    star.kill();
+
+    //  Add and update the score
+    score += 10;
+    scoreText.text = 'Score: ' + score;
+
+}
+
+//需要传入已知的值
+//function collide(player, qm, txts){//这里的txts是没用的，Phaser内部回调collide函数是只传了两个参数进来
+function collide(player, qm){
+     
+	qm.kill();
+	if(qm.isOdd){//奇数
+		var explosion = explosions.getFirstExists(false);
+        explosion.reset(qm.body.x, qm.body.y);
+        explosion.play('kaboom', 30, false, true);
+
+		score += 20;
+        scoreText.text = 'Score: ' + score;
+	}else{//偶数
+		var t = txts[qm.txtIndex];
+		t.x = qm.x - 100;
+		t.y = -10;
+		t.alpha = 1;
+		game.add.tween(t).to({y: 100, alpha: 1}, 1500, Phaser.Easing.Bounce.Out, true, 0, 0, false);
+	}
+
+}
+
+var firstTime = null;
+function enterHome(player, home){
+	if (firstTime == null){
+		firstTime = true;
+		last.visible = true;
+		last.x  = home.x - 125;
+		last.x  = game.camera.x;
+		last.y = -10;
+		//player.visible = true;
+		home.visible = false;
+		btLeft.visible = false;
+		btRight.visible = false;
+		btUp.visible = false;
+	
+		game.add.tween(last).to({y: 100, alpha: 1}, 1500, Phaser.Easing.Bounce.Out, true, 0, 0, false);
+	}
+}
+
+function render(){
+   game.debug.cameraInfo(game.camera, 16, 60);
+}

@@ -256,7 +256,7 @@ var gameMonitor = {
 		});
 		body.on(gameMonitor.eventType.end,'#stage', function(event){
 			event.preventDefault();
-            /*dealTouchEnd();*/
+           
 		});
 	},
 	isMobile : function(){
@@ -318,7 +318,6 @@ function paint(){
 	var width=0.375*canvas.width;
 	var height=0.18*canvas.height;
 	ctx.clearRect(0,0,canvas.width,canvas.height);
-	/*DrawImage568(gameMonitor.bg2, 0, 0, screenWidth,screenHeight);*/
 	DrawImage568(gameMonitor.top, 0, 0, screenWidth,screenHeight*0.52);
 	DrawImage568(gameMonitor.bottom, 0, screenHeight*0.52, screenWidth,screenHeight*0.48);
 	DrawImage568(gameMonitor.timeBar,0,0,320,79);
@@ -333,15 +332,7 @@ function paint(){
 	 if(paperState==1){
 	   DrawImage568(gameMonitor.ci,random*250,374.5,100,70);	
 	   } 
-	/*if(drawState==0){
-	    ImageRotate(ctx, gameMonitor.ruler,centerX, centerY, width, height, rotateAngle)
-	    ImageScaleRotate(ctx,gameMonitor.paper, X, Y,Width,Height, rotateAngle);
-	   }
-	if(drawState==1){
-		ImageScaleRotate(ctx,gameMonitor.paper, X, Y,Width,Height, rotateAngle);
-		ImageRotate(ctx, gameMonitor.ruler,centerX, centerY, width, height, rotateAngle)	   
-	   }*/
-		
+	
 	}  
 function DrawImageShear568(ctx, pic, SX, SY, Swidth, Sheight, X, Y, Width, Height){
 	var screenWidth, screenHeight;
@@ -365,7 +356,6 @@ function ImageScaleRotate(ctx, pic, X, Y, width,height, rotateAngle, scaleX, sca
 	ctx.scale(scaleX, scaleY);
 	ctx.rotate(rotateAngle * Math.PI / 180);
 	ctx.translate(-Width / 2, -Height / 2);
-	/*DrawImage568(pic, X, Y, Width, Height);*/
 	ctx.drawImage(pic, 0, 0, Width, Height);
 	ctx.restore();
 }	
@@ -445,14 +435,13 @@ function chooseStipulate(){
 			touchTime++;
 			stipulate2 = 1;
 			return;
-			}	//添加点击确定围范
-				 //重新定义点击规则确定进入游戏的范围
+			}	
 	 else if(0<touchY && touchY < arrY / 568 *canvas.height)			        
 			{
 			 touchTime++;
 			 stipulate3 = 1;
 			 return;
-			}	//添加点击确定围范
+			}	
 	 }else {
 			stipulate1 = 0;
 		    stipulate2 = 0;
@@ -568,9 +557,7 @@ function calculateScore(){
     }
        
 	  
-	/* else if(X<random*250+25||X>random*250+75){
-      if(Y>=391){collideMove();}      	 			 		   		  		      					 			  	 	       		  		
-	   }   */
+	
 }
 function collideMove(){	
     var y1=0.721*screenHeight;
@@ -646,7 +633,6 @@ function showOver(){
 	ctx.clearRect(0, 0, screenWidth, screenHeight);
 	DrawImage568(gameMonitor.bg1, 0, 0, screenWidth, screenHeight)
 	DrawImage568(gameMonitor.bt, 10, 350, 300, 100);	
-	/*DrawImage568(gameMonitor.hei, 0, 0, screenWidth, screenHeight);*/
 	openUrl();	
 	}
 if(!gameMonitor.isMobile()){

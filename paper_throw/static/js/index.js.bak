@@ -308,7 +308,7 @@ function gameStop(){
 }
 function openUrl(){
 	if(restartFlag == 1){
-	window.open('http://www.baidu.com');
+	window.open('http://www.baidu.com','_self');
 	restartFlag=0;
 	}
 }

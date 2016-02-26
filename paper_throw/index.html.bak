@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="initial-scale=1, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0, width=device-width">
+    <title>首页</title>
+    <script src="static/js/zepto.min.js"></script>
+    <script src="static/js/buzz.min.js"></script>
+    <style type="text/css">
+        body {
+            margin:0;
+        }
+	    
+    </style>
+    
+</head>
+<body>
+<canvas id="stage" width="320" height="568"></canvas>
+<script src="static/js/index.js"></script>
+
+</body>
+</html>
